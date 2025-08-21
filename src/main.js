@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import axios from 'axios';
+import { initUI } from './ui.js';
 
 const AU = 149597870.7; // kilometers per astronomical unit
 
@@ -48,8 +49,7 @@ async function init() {
   const comet = new THREE.Mesh(cometGeometry, cometMaterial);
   scene.add(comet);
 
-  function updateCometPosition() {
-    const now = new Date();
+  function updateCometPosition(now = new Date()) {
 
     if (now <= ephemeris[0].time) {
       comet.position.copy(pathPoints[0]);
@@ -73,9 +73,18 @@ async function init() {
     }
   }
 
+  const ui = initUI(
+    ephemeris[0].time,
+    ephemeris[ephemeris.length - 1].time,
+    updateCometPosition
+  );
+
+  setInterval(() => {
+    ui.updateCurrentTime(new Date());
+  }, 5000);
+
   function animate() {
     requestAnimationFrame(animate);
-    updateCometPosition();
     controls.update();
     renderer.render(scene, camera);
   }
