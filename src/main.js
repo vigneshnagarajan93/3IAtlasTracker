@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import axios from 'axios';
+import InfoPanel from './components/InfoPanel.js';
 
 const AU = 149597870.7; // kilometers per astronomical unit
 
@@ -33,7 +34,10 @@ async function init() {
   const ephemeris = data.data.map((entry) => ({
     time: new Date(entry.timestamp),
     position: entry.position.map((v) => v / AU),
+    velocity: entry.velocity,
   }));
+
+  const infoPanel = new InfoPanel(ephemeris);
 
   // Plot comet path
   const pathPoints = ephemeris.map((e) => new THREE.Vector3(...e.position));
@@ -48,9 +52,7 @@ async function init() {
   const comet = new THREE.Mesh(cometGeometry, cometMaterial);
   scene.add(comet);
 
-  function updateCometPosition() {
-    const now = new Date();
-
+  function updateCometPosition(now) {
     if (now <= ephemeris[0].time) {
       comet.position.copy(pathPoints[0]);
       return;
@@ -75,7 +77,9 @@ async function init() {
 
   function animate() {
     requestAnimationFrame(animate);
-    updateCometPosition();
+    const now = new Date();
+    updateCometPosition(now);
+    infoPanel.update(now);
     controls.update();
     renderer.render(scene, camera);
   }
